@@ -3,9 +3,9 @@
 # CloudFront和S3安全配置验证脚本
 set -e
 
-BUCKET_NAME="wyz-mediaconvert-bucket-virginia"
-DISTRIBUTION_ID="E2OOLQY70ZOTOA"
-OAC_ID="EZ3T285Q2VMKQ"
+BUCKET_NAME="${BUCKET_NAME:-YOUR_BUCKET_NAME}"
+DISTRIBUTION_ID="${DISTRIBUTION_ID:-YOUR_DISTRIBUTION_ID}"
+OAC_ID="${OAC_ID:-YOUR_OAC_ID}"
 
 echo "🔒 CloudFront和S3安全配置验证"
 echo "=================================="
@@ -93,7 +93,7 @@ echo ""
 
 # 6. 测试CloudFront访问（应该成功）
 echo "6. 测试CloudFront访问（应该成功）..."
-CLOUDFRONT_URL="https://d3g6olblkz60ii.cloudfront.net/4ktest.m3u8"
+CLOUDFRONT_URL="https://${CLOUDFRONT_DOMAIN:-YOUR_CLOUDFRONT_DOMAIN}/4ktest.m3u8"
 
 if curl -s -I "$CLOUDFRONT_URL" | grep -q "200 OK"; then
     echo "   ✅ CloudFront访问成功"

@@ -8,10 +8,10 @@
         "Service": "cloudfront.amazonaws.com"
       },
       "Action": "s3:GetObject",
-      "Resource": "arn:aws:s3:::wyz-mediaconvert-bucket-virginia/output/hls/*",
+      "Resource": "arn:aws:s3:::YOUR_BUCKET_NAME/output/hls/*",
       "Condition": {
         "StringEquals": {
-          "AWS:SourceArn": "arn:aws:cloudfront::533267335205:distribution/E2OOLQY70ZOTOA"
+          "AWS:SourceArn": "arn:aws:cloudfront::YOUR_AWS_ACCOUNT_ID:distribution/YOUR_DISTRIBUTION_ID"
         }
       }
     }

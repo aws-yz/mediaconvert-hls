@@ -3,8 +3,8 @@
 # CloudFront分发管理脚本
 set -e
 
-DISTRIBUTION_ID="E2OOLQY70ZOTOA"
-DOMAIN_NAME="d3g6olblkz60ii.cloudfront.net"
+DISTRIBUTION_ID="${DISTRIBUTION_ID:-YOUR_DISTRIBUTION_ID}"
+DOMAIN_NAME="${CLOUDFRONT_DOMAIN:-YOUR_CLOUDFRONT_DOMAIN}"
 
 echo "🌐 CloudFront HLS分发管理工具"
 echo "================================"

@@ -20,6 +20,13 @@
 - **安全访问**: 使用Origin Access Control (OAC)保护S3资源
 - **跨浏览器兼容**: 支持Safari、Chrome、Firefox等主流浏览器
 
+## 🔒 重要安全提醒
+
+**在开始之前，请注意：**
+- 本项目使用配置模板，包含需要替换的占位符
+- 请勿在配置文件中硬编码AWS账户ID、密钥等敏感信息
+- 详细安全配置请参考：[SECURITY-GUIDE.md](SECURITY-GUIDE.md)
+
 ## 📋 前置要求
 
 ### 必需工具

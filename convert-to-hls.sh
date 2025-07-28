@@ -72,8 +72,10 @@ ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 ROLE_ARN="arn:aws:iam::$ACCOUNT_ID:role/$ROLE_NAME"
 
 # 替换配置文件中的占位符
-sed -i.bak "s/your-mediaconvert-bucket/$BUCKET_NAME/g" mediaconvert-job.json
-sed -i.bak "s|arn:aws:iam::533267335205:role/MediaConvertRole|$ROLE_ARN|g" mediaconvert-job.json
+sed -i.bak "s/YOUR_BUCKET_NAME/$BUCKET_NAME/g" mediaconvert-job.json
+sed -i.bak "s/YOUR_INPUT_FILE/$INPUT_FILE/g" mediaconvert-job.json
+sed -i.bak "s|YOUR_AWS_ACCOUNT_ID|$ACCOUNT_ID|g" mediaconvert-job.json
+sed -i.bak "s|YOUR_ROLE_NAME|$ROLE_NAME|g" mediaconvert-job.json
 
 # 6. 提交MediaConvert作业
 echo "6. 提交MediaConvert作业..."
