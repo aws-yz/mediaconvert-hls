@@ -178,10 +178,10 @@
             <button class="btn" onclick="loadVideo('https://YOUR_CLOUDFRONT_DOMAIN/YOUR_VIDEO_NAME_1080p.m3u8')">>
                 📺 1080p
             </button>
-            <button class="btn" onclick="loadVideo('https://d3g6olblkz60ii.cloudfront.net/4ktest_720p.m3u8')">
+            <button class="btn" onclick="loadVideo('https://YOUR_CLOUDFRONT_DOMAIN/YOUR_VIDEO_NAME_720p.m3u8')">>
                 📱 720p
             </button>
-            <button class="btn" onclick="loadVideo('https://d3g6olblkz60ii.cloudfront.net/4ktest_360p.m3u8')">
+            <button class="btn" onclick="loadVideo('https://YOUR_CLOUDFRONT_DOMAIN/YOUR_VIDEO_NAME_360p.m3u8')">>
                 📶 360p
             </button>
         </div>
@@ -253,9 +253,9 @@
             showStatus('<div class="loading"></div>测试连接中...', 'info');
             
             const testUrls = [
-                'https://d3g6olblkz60ii.cloudfront.net/4ktest.m3u8',
-                'https://d3g6olblkz60ii.cloudfront.net/4ktest_720p.m3u8',
-                'https://d3g6olblkz60ii.cloudfront.net/4ktest_720p_00001.ts'
+                'https://YOUR_CLOUDFRONT_DOMAIN/YOUR_VIDEO_NAME.m3u8',
+                'https://YOUR_CLOUDFRONT_DOMAIN/YOUR_VIDEO_NAME_720p.m3u8',
+                'https://YOUR_CLOUDFRONT_DOMAIN/YOUR_VIDEO_NAME_720p_00001.ts'
             ];
             
             Promise.all(testUrls.map(url => 
@@ -400,7 +400,7 @@
             log('页面加载完成');
             testConnectivity();
             setTimeout(() => {
-                loadVideo('https://d3g6olblkz60ii.cloudfront.net/4ktest.m3u8');
+                loadVideo('https://YOUR_CLOUDFRONT_DOMAIN/YOUR_VIDEO_NAME.m3u8');
             }, 1000);
         });
     </script>
