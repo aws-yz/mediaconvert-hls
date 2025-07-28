@@ -1,0 +1,125 @@
+name: Validate Project
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup environment
+      run: |
+        # 安装必需工具
+        sudo apt-get update
+        sudo apt-get install -y curl jq
+        
+        # 验证AWS CLI（如果需要）
+        # aws --version || echo "AWS CLI not available in CI"
+        
+    - name: Validate shell scripts
+      run: |
+        # 检查shell脚本语法
+        echo "Validating shell scripts..."
+        for script in *.sh; do
+          if [ -f "$script" ]; then
+            echo "Checking $script..."
+            bash -n "$script" || exit 1
+          fi
+        done
+        
+    - name: Check file permissions
+      run: |
+        # 检查脚本文件权限
+        echo "Checking script permissions..."
+        for script in *.sh; do
+          if [ -f "$script" ] && [ ! -x "$script" ]; then
+            echo "Warning: $script is not executable"
+          fi
+        done
+        
+    - name: Validate JSON files
+      run: |
+        # 验证JSON文件格式
+        echo "Validating JSON files..."
+        for json_file in *.json; do
+          if [ -f "$json_file" ]; then
+            echo "Checking $json_file..."
+            jq empty "$json_file" || exit 1
+          fi
+        done
+        
+    - name: Check documentation
+      run: |
+        # 检查必需的文档文件
+        echo "Checking documentation files..."
+        required_docs=("README.md" "QUICK-START-GUIDE.md" "CloudFront-HLS-Setup-Guide.md" "LICENSE")
+        for doc in "${required_docs[@]}"; do
+          if [ ! -f "$doc" ]; then
+            echo "Error: Required documentation file $doc is missing"
+            exit 1
+          fi
+        done
+        
+    - name: Validate configuration template
+      run: |
+        # 检查配置模板
+        if [ ! -f ".env.example" ]; then
+          echo "Error: .env.example template is missing"
+          exit 1
+        fi
+        
+        # 检查.gitignore
+        if [ ! -f ".gitignore" ]; then
+          echo "Error: .gitignore is missing"
+          exit 1
+        fi
+        
+        # 确保敏感文件被忽略
+        if grep -q "\.env$" .gitignore && grep -q "\.mp4$" .gitignore; then
+          echo "✅ Sensitive files are properly ignored"
+        else
+          echo "Error: .gitignore doesn't properly exclude sensitive files"
+          exit 1
+        fi
+        
+    - name: Check project structure
+      run: |
+        # 验证项目结构
+        echo "Validating project structure..."
+        required_files=(
+          "setup-config.sh"
+          "convert-to-hls.sh"
+          "manage-cloudfront.sh"
+          "verify-config.sh"
+          "verify-security.sh"
+          "enhanced-hls-player.html"
+          "mediaconvert-job.json"
+          "trust-policy.json"
+          "permissions-policy.json"
+          "s3-cors-config.json"
+        )
+        
+        for file in "${required_files[@]}"; do
+          if [ ! -f "$file" ]; then
+            echo "Error: Required file $file is missing"
+            exit 1
+          fi
+        done
+        
+        echo "✅ All required files are present"
+        
+    - name: Summary
+      run: |
+        echo "🎉 Project validation completed successfully!"
+        echo "✅ Shell scripts syntax is valid"
+        echo "✅ JSON files are well-formed"
+        echo "✅ Documentation is complete"
+        echo "✅ Project structure is correct"
+        echo "✅ Configuration templates are present"
