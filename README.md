@@ -1,6 +1,16 @@
 # MediaConvert HLS视频转换与分发项目
 
+[![GitHub](https://img.shields.io/github/license/aws-yz/mediaconvert-hls)](https://github.com/aws-yz/mediaconvert-hls/blob/main/LICENSE)
+[![GitHub issues](https://img.shields.io/github/issues/aws-yz/mediaconvert-hls)](https://github.com/aws-yz/mediaconvert-hls/issues)
+[![GitHub stars](https://img.shields.io/github/stars/aws-yz/mediaconvert-hls)](https://github.com/aws-yz/mediaconvert-hls/stargazers)
+[![Validate Project](https://github.com/aws-yz/mediaconvert-hls/actions/workflows/validate.yml/badge.svg)](https://github.com/aws-yz/mediaconvert-hls/actions/workflows/validate.yml)
+
 一个完整的解决方案，将4K MP4视频转换为HLS格式的多分辨率自适应流媒体，并通过CloudFront进行全球分发。
+
+## 🌟 GitHub仓库
+- **仓库地址**: https://github.com/aws-yz/mediaconvert-hls
+- **问题反馈**: [创建Issue](https://github.com/aws-yz/mediaconvert-hls/issues/new/choose)
+- **贡献指南**: [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## 🎯 项目功能
 
