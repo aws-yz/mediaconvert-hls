@@ -1,0 +1,111 @@
+{
+  "Role": "arn:aws:iam::533267335205:role/MediaConvertRole",
+  "Settings": {
+    "OutputGroups": [
+      {
+        "Name": "HLS_Output",
+        "Outputs": [
+          {
+            "ContainerSettings": {
+              "Container": "M3U8"
+            },
+            "VideoDescription": {
+              "CodecSettings": {
+                "Codec": "H_264",
+                "H264Settings": {
+                  "Bitrate": 5000000,
+                  "RateControlMode": "CBR",
+                  "GopSize": 90
+                }
+              },
+              "Width": 1920,
+              "Height": 1080
+            },
+            "AudioDescriptions": [
+              {
+                "CodecSettings": {
+                  "Codec": "AAC",
+                  "AacSettings": {
+                    "Bitrate": 96000,
+                    "SampleRate": 48000
+                  }
+                }
+              }
+            ],
+            "NameModifier": "_1080p"
+          },
+          {
+            "ContainerSettings": {
+              "Container": "M3U8"
+            },
+            "VideoDescription": {
+              "CodecSettings": {
+                "Codec": "H_264",
+                "H264Settings": {
+                  "Bitrate": 2500000,
+                  "RateControlMode": "CBR",
+                  "GopSize": 90
+                }
+              },
+              "Width": 1280,
+              "Height": 720
+            },
+            "AudioDescriptions": [
+              {
+                "CodecSettings": {
+                  "Codec": "AAC",
+                  "AacSettings": {
+                    "Bitrate": 96000,
+                    "SampleRate": 48000
+                  }
+                }
+              }
+            ],
+            "NameModifier": "_720p"
+          },
+          {
+            "ContainerSettings": {
+              "Container": "M3U8"
+            },
+            "VideoDescription": {
+              "CodecSettings": {
+                "Codec": "H_264",
+                "H264Settings": {
+                  "Bitrate": 800000,
+                  "RateControlMode": "CBR",
+                  "GopSize": 90
+                }
+              },
+              "Width": 640,
+              "Height": 360
+            },
+            "AudioDescriptions": [
+              {
+                "CodecSettings": {
+                  "Codec": "AAC",
+                  "AacSettings": {
+                    "Bitrate": 96000,
+                    "SampleRate": 48000
+                  }
+                }
+              }
+            ],
+            "NameModifier": "_360p"
+          }
+        ],
+        "OutputGroupSettings": {
+          "Type": "HLS_GROUP_SETTINGS",
+          "HlsGroupSettings": {
+            "SegmentLength": 10,
+            "Destination": "s3://wyz-mediaconvert-bucket-virginia/output/hls/"
+          }
+        }
+      }
+    ],
+    "Inputs": [
+      {
+        "FileInput": "s3://wyz-mediaconvert-bucket-virginia/input/4ktest.mp4"
+      }
+    ]
+  }
+}
