@@ -18,6 +18,7 @@
 - **自适应流媒体**: 根据网络条件自动调整视频质量
 - **全球分发**: 通过CloudFront CDN实现低延迟播放
 - **安全访问**: 使用Origin Access Control (OAC)保护S3资源
+- **DRM内容保护**: 支持Static Key DRM加密，防止未授权访问
 - **跨浏览器兼容**: 支持Safari、Chrome、Firefox等主流浏览器
 
 ## 🔒 重要安全提醒
@@ -95,17 +96,31 @@ source .env
 
 ## 📹 MediaConvert作业执行
 
-### 运行视频转换
+### 标准视频转换
 ```bash
-# 执行HLS转换（这是核心步骤）
+# 执行标准HLS转换（无加密）
 ./convert-to-hls.sh
+```
+
+### 🔐 DRM加密转换
+```bash
+# 1. 首先设置DRM密钥
+./setup-drm-keys.sh
+
+# 2. 上传密钥文件到S3
+source .env
+aws s3 cp keys/ s3://$BUCKET_NAME/keys/ --recursive
+
+# 3. 使用加密配置进行转换
+# 注意：需要手动修改convert-to-hls.sh使用加密配置文件
+# 或者直接使用AWS CLI提交加密作业
 ```
 
 **转换过程包括：**
 1. 创建S3存储桶
 2. 上传源视频文件
 3. 创建IAM角色和权限
-4. 提交MediaConvert作业
+4. 提交MediaConvert作业（标准或加密）
 5. 监控转换进度
 6. 显示输出文件列表
 
@@ -116,6 +131,7 @@ source .env
    输入文件: your-video.mp4
    AWS区域: us-east-1
    IAM角色: MediaConvertRole
+   DRM加密: 启用/禁用
 
 开始MediaConvert HLS转换流程...
 ✅ 转换完成！
@@ -248,6 +264,13 @@ source .env
 - **帧率**: 保持原始帧率
 - **GOP大小**: 90帧
 
+### 🔐 DRM加密设置
+- **加密算法**: AES-128
+- **加密方式**: Static Key DRM
+- **密钥管理**: 支持固定密钥、时间相关密钥、用户相关密钥
+- **密钥分发**: 通过HTTPS URL分发
+- **兼容性**: 支持HLS标准的所有主流播放器
+
 ## 💰 成本估算
 
 ### MediaConvert费用
@@ -327,19 +350,40 @@ curl -H "Origin: https://example.com" -I https://your-domain/video.m3u8
 
 ```
 mediaConvert/
-├── setup-config.sh              # 配置向导脚本
-├── convert-to-hls.sh            # 主转换脚本
-├── manage-cloudfront.sh         # CloudFront管理脚本
-├── verify-config.sh             # 配置验证脚本
-├── verify-security.sh           # 安全验证脚本
-├── enhanced-hls-player.html     # HLS播放器
-├── mediaconvert-job.json        # MediaConvert作业配置
-├── trust-policy.json            # IAM信任策略
-├── permissions-policy.json      # IAM权限策略
-├── s3-cors-config.json          # S3 CORS配置
-├── CloudFront-HLS-Setup-Guide.md # CloudFront详细指南
-├── .env                         # 环境配置文件（自动生成）
-└── README.md                    # 本文件
+├── 🚀 核心脚本
+│   ├── setup-config.sh              # 配置向导脚本
+│   ├── convert-to-hls.sh            # 主转换脚本
+│   ├── manage-cloudfront.sh         # CloudFront管理脚本
+│   └── setup-drm-keys.sh            # DRM密钥生成和管理脚本
+│
+├── 🔍 验证脚本
+│   ├── verify-config.sh             # 配置验证脚本
+│   └── verify-security.sh           # 安全验证脚本
+│
+├── 🎬 播放器
+│   └── enhanced-hls-player.html     # HLS播放器
+│
+├── ⚙️ 配置文件（模板化）
+│   ├── mediaconvert-job.json        # 标准MediaConvert作业配置
+│   ├── mediaconvert-job-encrypted-fixed.json # DRM加密作业配置
+│   ├── simple-mediaconvert-job.json # 简化版作业配置
+│   ├── trust-policy.json            # IAM信任策略
+│   ├── permissions-policy.json      # IAM权限策略
+│   ├── s3-bucket-policy.json        # S3存储桶策略
+│   └── s3-cors-config.json          # S3 CORS配置
+│
+├── 📝 文档
+│   ├── README.md                    # 主要文档（本文件）
+│   ├── SECURITY-GUIDE.md            # 安全配置指南
+│   ├── CloudFront-HLS-Setup-Guide.md # CloudFront详细指南
+│   └── 其他文档...
+│
+├── 🔧 环境配置
+│   ├── .env                         # 环境配置文件（自动生成）
+│   └── .env.example                 # 环境配置示例
+│
+└── 📄 项目信息
+    └── LICENSE                      # 开源许可证
 ```
 
 ## 🔒 安全最佳实践
