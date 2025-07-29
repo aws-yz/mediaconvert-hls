@@ -55,9 +55,9 @@ if [ "$NON_INTERACTIVE" = "false" ]; then
     echo ""
     echo "1. S3存储桶名称"
     echo "   当前值: ${BUCKET_NAME:-未设置}"
-    echo "   请输入S3存储桶名称 (留空使用默认值 'wyz-mediaconvert-bucket-virginia'):"
+    echo "   请输入S3存储桶名称 (留空使用默认值 'your-unique-bucket-name'):"
     read -r new_bucket_name
-    BUCKET_NAME="${new_bucket_name:-${BUCKET_NAME:-wyz-mediaconvert-bucket-virginia}}"
+    BUCKET_NAME="${new_bucket_name:-${BUCKET_NAME:-your-unique-bucket-name}}"
 
     # 输入文件名
     echo ""
@@ -94,7 +94,7 @@ if [ "$NON_INTERACTIVE" = "false" ]; then
 else
     # 非交互式模式 - 使用默认值或现有值
     echo "使用非交互式模式，应用默认配置..."
-    BUCKET_NAME="${BUCKET_NAME:-wyz-mediaconvert-bucket-virginia}"
+    BUCKET_NAME="${BUCKET_NAME:-your-unique-bucket-name}"
     INPUT_FILE="${INPUT_FILE:-4ktest.mp4}"
     AWS_REGION="${AWS_REGION:-us-east-1}"
     ROLE_NAME="${ROLE_NAME:-MediaConvertRole}"

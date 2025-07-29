@@ -77,12 +77,12 @@ export OAC_ID="EZ3T285Q2VMKQ"
 ### .env 配置文件
 ```bash
 # 基础配置
-export BUCKET_NAME="wyz-mediaconvert-bucket-virginia"
+export BUCKET_NAME="your-unique-bucket-name"
 export INPUT_FILE="4ktest.mp4"
 export AWS_REGION="us-east-1"
 export ROLE_NAME="MediaConvertRole"
 export PROJECT_NAME="mediaconvert-hls"
-export AWS_ACCOUNT_ID="533267335205"
+export AWS_ACCOUNT_ID="123456789012"
 
 # CloudFront配置 (部署后更新)
 export DISTRIBUTION_ID=""
@@ -137,7 +137,7 @@ export ROLE_NAME="DevMediaConvertRole"
 
 | 参数 | 环境变量 | 默认值 | 说明 |
 |------|----------|--------|------|
-| 存储桶名称 | `BUCKET_NAME` | `wyz-mediaconvert-bucket-virginia` | S3存储桶 |
+| 存储桶名称 | `BUCKET_NAME` | `your-unique-bucket-name` | S3存储桶 |
 | 输入文件 | `INPUT_FILE` | `4ktest.mp4` | 源视频文件 |
 | AWS区域 | `AWS_REGION` | `us-east-1` | 部署区域 |
 | IAM角色 | `ROLE_NAME` | `MediaConvertRole` | MediaConvert角色 |

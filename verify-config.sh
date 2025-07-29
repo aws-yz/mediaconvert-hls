@@ -3,7 +3,7 @@
 # MediaConvert配置验证脚本
 set -e
 
-BUCKET_NAME="wyz-mediaconvert-bucket-virginia"
+BUCKET_NAME="your-unique-bucket-name"
 REGION="us-east-1"
 ROLE_NAME="MediaConvertRole"
 
@@ -52,7 +52,7 @@ echo "6. 验证配置文件..."
 if [ -f "mediaconvert-job.json" ]; then
     echo "✅ 配置文件存在"
     # 检查配置文件中的存储桶名称
-    if grep -q "wyz-mediaconvert-bucket-virginia" mediaconvert-job.json; then
+    if grep -q "your-unique-bucket-name" mediaconvert-job.json; then
         echo "✅ 配置文件中的存储桶名称正确"
     else
         echo "❌ 配置文件中的存储桶名称需要更新"

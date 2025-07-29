@@ -64,7 +64,8 @@
                   "GopSizeUnits": "FRAMES",
                   "ParControl": "INITIALIZE_FROM_SOURCE",
                   "NumberBFramesBetweenReferenceFrames": 2,
-                  "RepeatPps": "DISABLED"
+                  "RepeatPps": "DISABLED",
+                  "DynamicSubGop": "STATIC"
                 }
               },
               "AfdSignaling": "NONE",
@@ -135,7 +136,7 @@
                   "TemporalAdaptiveQuantization": "ENABLED",
                   "FlickerAdaptiveQuantization": "DISABLED",
                   "EntropyEncoding": "CABAC",
-                  "Bitrate": 2500000,
+                  "Bitrate": 2900000,
                   "FramerateControl": "INITIALIZE_FROM_SOURCE",
                   "RateControlMode": "CBR",
                   "CodecProfile": "MAIN",
@@ -151,7 +152,8 @@
                   "GopSizeUnits": "FRAMES",
                   "ParControl": "INITIALIZE_FROM_SOURCE",
                   "NumberBFramesBetweenReferenceFrames": 2,
-                  "RepeatPps": "DISABLED"
+                  "RepeatPps": "DISABLED",
+                  "DynamicSubGop": "STATIC"
                 }
               },
               "AfdSignaling": "NONE",
@@ -222,7 +224,7 @@
                   "TemporalAdaptiveQuantization": "ENABLED",
                   "FlickerAdaptiveQuantization": "DISABLED",
                   "EntropyEncoding": "CABAC",
-                  "Bitrate": 800000,
+                  "Bitrate": 1000000,
                   "FramerateControl": "INITIALIZE_FROM_SOURCE",
                   "RateControlMode": "CBR",
                   "CodecProfile": "MAIN",
@@ -238,7 +240,8 @@
                   "GopSizeUnits": "FRAMES",
                   "ParControl": "INITIALIZE_FROM_SOURCE",
                   "NumberBFramesBetweenReferenceFrames": 2,
-                  "RepeatPps": "DISABLED"
+                  "RepeatPps": "DISABLED",
+                  "DynamicSubGop": "STATIC"
                 }
               },
               "AfdSignaling": "NONE",
@@ -288,7 +291,16 @@
             "SegmentControl": "SEGMENTED_FILES",
             "ManifestCompression": "NONE",
             "ClientCache": "ENABLED",
-            "StreamInfResolution": "INCLUDE"
+            "StreamInfResolution": "INCLUDE",
+            "Encryption": {
+              "Type": "STATIC_KEY",
+              "StaticKeyProvider": {
+                "StaticKeyValue": "YOUR_16_BYTE_HEX_KEY",
+                "Url": "https://YOUR_CLOUDFRONT_DOMAIN/keys/encryption.key"
+              },
+              "InitializationVectorInManifest": "INCLUDE",
+              "EncryptionMethod": "AES128"
+            }
           }
         }
       }
@@ -312,7 +324,7 @@
         "DeblockFilter": "DISABLED",
         "DenoiseFilter": "DISABLED",
         "TimecodeSource": "EMBEDDED",
-        "FileInput": "s3://YOUR_BUCKET_NAME/input/YOUR_INPUT_FILE"
+        "FileInput": "s3://YOUR_BUCKET_NAME/YOUR_INPUT_FILE"
       }
     ]
   }

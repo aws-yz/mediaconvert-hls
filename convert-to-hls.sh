@@ -15,7 +15,7 @@
 set -e
 
 # 配置变量 - 可通过环境变量或命令行参数覆盖
-BUCKET_NAME="${1:-${BUCKET_NAME:-wyz-mediaconvert-bucket-virginia}}"
+BUCKET_NAME="${1:-${BUCKET_NAME:-your-unique-bucket-name}}"
 INPUT_FILE="${2:-${INPUT_FILE:-4ktest.mp4}}"
 REGION="${3:-${REGION:-us-east-1}}"
 ROLE_NAME="${4:-${ROLE_NAME:-MediaConvertRole}}"

@@ -5,7 +5,7 @@
 [![GitHub stars](https://img.shields.io/github/stars/aws-yz/mediaconvert-hls)](https://github.com/aws-yz/mediaconvert-hls/stargazers)
 [![Validate Project](https://github.com/aws-yz/mediaconvert-hls/actions/workflows/validate.yml/badge.svg)](https://github.com/aws-yz/mediaconvert-hls/actions/workflows/validate.yml)
 
-一个完整的解决方案，将4K MP4视频转换为HLS格式的多分辨率自适应流媒体，并通过CloudFront进行全球分发。
+一个完整的解决方案，将4K MP4视频转换为HLS格式的多分辨率自适应流媒体，支持标准转码和DRM加密两种模式，并可通过CloudFront进行全球分发。
 
 ## 🌟 GitHub仓库
 - **仓库地址**: https://github.com/aws-yz/mediaconvert-hls
@@ -16,6 +16,7 @@
 
 - **视频转换**: 将4K MP4转换为HLS格式（360p、720p、1080p）
 - **自适应流媒体**: 根据网络条件自动调整视频质量
+- **双模式支持**: 标准HLS转码 + DRM加密转码
 - **全球分发**: 通过CloudFront CDN实现低延迟播放
 - **安全访问**: 使用Origin Access Control (OAC)保护S3资源
 - **DRM内容保护**: 支持Static Key DRM加密，防止未授权访问
@@ -34,13 +35,14 @@
 - **AWS CLI** - 已配置有效凭证
 - **bash** - 脚本执行环境
 - **curl** - 网络测试工具
-- **jq** - JSON处理工具（可选，用于高级功能）
+- **jq** - JSON处理工具
+- **openssl** - 密钥生成工具（DRM模式需要）
 
 ### AWS权限要求
 你的AWS账户需要以下服务权限：
 - **MediaConvert** - 视频转换服务
 - **S3** - 存储桶创建和文件管理
-- **CloudFront** - CDN分发创建和管理
+- **CloudFront** - CDN分发创建和管理（可选）
 - **IAM** - 角色创建和策略管理
 
 ### 验证环境
@@ -49,10 +51,120 @@
 aws sts get-caller-identity
 
 # 检查必需工具
-which curl bash
+which curl bash jq openssl
 ```
 
 ## 🚀 快速开始
+
+### 选择部署模式
+
+本项目支持两种转码模式，请根据需求选择：
+
+| 模式 | 适用场景 | 安全级别 | 复杂度 | 一键部署 |
+|------|----------|----------|--------|----------|
+| **标准HLS** | 公开内容、教育视频、营销内容 | 基础 | 简单 | `./deploy-standard-complete.sh` |
+| **DRM加密** | 付费内容、版权保护、企业内容 | 高级 | 中等 | `./deploy-drm-complete.sh` |
+
+### 方法一：一键自动化部署（推荐）
+
+#### 🎬 标准HLS转码（无加密）
+
+**适合公开内容，部署简单快速：**
+
+```bash
+# 1. 确保所有脚本有执行权限
+chmod +x *.sh
+
+# 2. 配置项目参数
+./setup-config.sh
+
+# 3. 一键标准HLS部署
+./deploy-standard-complete.sh
+```
+
+**标准模式会自动完成：**
+- S3存储桶创建
+- IAM角色配置
+- MediaConvert标准转码
+- 输出文件验证
+
+#### 🔐 DRM加密转码（内容保护）
+
+**适合需要版权保护的付费内容：**
+
+```bash
+# 1. 确保所有脚本有执行权限
+chmod +x *.sh
+
+# 2. 配置项目参数
+./setup-config.sh
+
+# 3. 一键DRM加密部署
+./deploy-drm-complete.sh
+```
+
+**DRM模式会自动完成：**
+- S3存储桶创建
+- CloudFront分发创建
+- DRM密钥生成
+- IAM角色配置
+- MediaConvert加密转码
+- 部署验证
+
+### 方法二：分步部署（完全控制）
+
+#### 标准HLS转码分步流程
+
+```bash
+# 1. 项目配置
+./setup-config.sh
+source .env
+
+# 2. 创建S3存储桶并上传视频
+aws s3 mb s3://$BUCKET_NAME --region $AWS_REGION
+aws s3 cp your-video.mp4 s3://$BUCKET_NAME/
+
+# 3. 配置IAM角色
+./setup-iam-role.sh
+
+# 4. 执行标准转码
+./convert-to-hls.sh
+
+# 5. (可选) 创建CloudFront分发
+./create-cloudfront.sh
+```
+
+#### DRM加密转码分步流程
+
+```bash
+# 1. 项目配置
+./setup-config.sh
+source .env
+
+# 2. 创建S3存储桶并上传视频
+aws s3 mb s3://$BUCKET_NAME --region $AWS_REGION
+aws s3 cp your-video.mp4 s3://$BUCKET_NAME/
+
+# 3. 创建CloudFront分发（DRM必需）
+./create-cloudfront.sh
+source .env  # 重新加载更新的环境变量
+
+# 4. 生成DRM密钥
+./setup-drm-keys.sh
+
+# 5. 上传密钥文件
+aws s3 cp keys/ s3://$BUCKET_NAME/keys/ --recursive
+
+# 6. 配置IAM角色
+./setup-iam-role.sh
+
+# 7. 执行加密转码
+ENDPOINT=$(aws mediaconvert describe-endpoints --query 'Endpoints[0].Url' --output text --region $AWS_REGION)
+aws mediaconvert create-job \
+    --endpoint-url $ENDPOINT \
+    --region $AWS_REGION \
+    --cli-input-json file://mediaconvert-job-encrypted-ready.json
+```
 
 ### 第一步：获取项目
 ```bash
@@ -85,111 +197,124 @@ chmod +x *.sh
 ls -la your-video-file.mp4
 ```
 
-### 第四步：加载配置并验证
+### 第四步：选择部署模式
 ```bash
-# 加载配置环境变量
-source .env
+# 标准HLS转码（推荐新手）
+./deploy-standard-complete.sh
 
-# 验证配置正确性
-./verify-config.sh
+# 或者 DRM加密转码（推荐付费内容）
+./deploy-drm-complete.sh
 ```
 
 ## 📹 MediaConvert作业执行
 
-### 标准视频转换
+### 🎬 标准HLS转码
+
+**适用场景：** 公开内容、教育视频、营销材料
+
 ```bash
-# 执行标准HLS转换（无加密）
+# 方法1: 使用一键部署脚本
+./deploy-standard-complete.sh
+
+# 方法2: 使用传统转换脚本
 ./convert-to-hls.sh
+
+# 方法3: 手动执行
+ENDPOINT=$(aws mediaconvert describe-endpoints --query 'Endpoints[0].Url' --output text --region $AWS_REGION)
+aws mediaconvert create-job \
+    --endpoint-url $ENDPOINT \
+    --region $AWS_REGION \
+    --cli-input-json file://mediaconvert-job-standard-ready.json
 ```
 
-### 🔐 DRM加密转换
+**输出文件：**
+- `video.m3u8` - 主播放列表（自适应）
+- `video_1080p.m3u8` - 1080p播放列表
+- `video_720p.m3u8` - 720p播放列表
+- `video_360p.m3u8` - 360p播放列表
+- `*.ts` - 视频分片文件
+
+### 🔐 DRM加密转码
+
+**适用场景：** 付费内容、版权保护、企业内容
+
 ```bash
-# 1. 首先设置DRM密钥
+# 方法1: 使用一键部署脚本（推荐）
+./deploy-drm-complete.sh
+
+# 方法2: 分步执行
+# 1. 创建CloudFront分发
+./create-cloudfront.sh
+
+# 2. 生成DRM密钥
 ./setup-drm-keys.sh
 
-# 2. 上传密钥文件到S3
-source .env
+# 3. 上传密钥文件
 aws s3 cp keys/ s3://$BUCKET_NAME/keys/ --recursive
 
-# 3. 使用加密配置进行转换
-# 注意：需要手动修改convert-to-hls.sh使用加密配置文件
-# 或者直接使用AWS CLI提交加密作业
+# 4. 执行加密转码
+ENDPOINT=$(aws mediaconvert describe-endpoints --query 'Endpoints[0].Url' --output text --region $AWS_REGION)
+aws mediaconvert create-job \
+    --endpoint-url $ENDPOINT \
+    --region $AWS_REGION \
+    --cli-input-json file://mediaconvert-job-encrypted-ready.json
 ```
 
-**转换过程包括：**
-1. 创建S3存储桶
-2. 上传源视频文件
-3. 创建IAM角色和权限
-4. 提交MediaConvert作业（标准或加密）
-5. 监控转换进度
-6. 显示输出文件列表
-
-**预期输出：**
-```
-📋 使用配置:
-   存储桶名称: your-bucket-name
-   输入文件: your-video.mp4
-   AWS区域: us-east-1
-   IAM角色: MediaConvertRole
-   DRM加密: 启用/禁用
-
-开始MediaConvert HLS转换流程...
-✅ 转换完成！
-主播放列表: s3://your-bucket/output/hls/video.m3u8
-```
+**输出文件：**
+- `video.m3u8` - 加密的主播放列表
+- `video_1080p.m3u8` - 加密的1080p播放列表
+- `video_720p.m3u8` - 加密的720p播放列表
+- `video_360p.m3u8` - 加密的360p播放列表
+- `*.ts` - 加密的视频分片文件
+- `keys/encryption.key` - DRM密钥文件
 
 **转换时间：** 4K视频转换通常需要15-30分钟，具体取决于视频长度和复杂度。
 
 ## ☁️ CloudFront分发设置
 
-### 方法一：使用管理脚本（推荐）
+### 何时需要CloudFront
+
+| 场景 | 标准HLS | DRM加密 |
+|------|---------|---------|
+| **本地测试** | 可选 | 必需 |
+| **生产环境** | 推荐 | 必需 |
+| **全球分发** | 推荐 | 必需 |
+| **DRM密钥分发** | 不适用 | 必需 |
+
+### 创建CloudFront分发
+
 ```bash
-# 运行CloudFront管理脚本
+# 自动创建（推荐）
+./create-cloudfront.sh
+
+# 管理现有分发
 ./manage-cloudfront.sh
-
-# 脚本会显示播放URL和本地播放器路径
 ```
 
-### 方法二：手动配置（完整控制）
-
-**详细步骤请参考：** `CloudFront-HLS-Setup-Guide.md`
-
-**快速配置命令：**
-```bash
-# 1. 设置环境变量
-export BUCKET_NAME="your-bucket-name"
-export AWS_REGION="us-east-1"
-export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-export PROJECT_NAME="mediaconvert-hls"
-
-# 2. 创建CloudFront分发
-# （参考CloudFront-HLS-Setup-Guide.md中的详细步骤）
-
-# 3. 创建Origin Access Control (OAC)
-# （参考指南中的OAC配置步骤）
-
-# 4. 配置S3存储桶策略
-# （参考指南中的安全配置步骤）
-
-# 5. 验证配置
-./verify-security.sh
-```
-
-**重要提示：** CloudFront分发部署通常需要10-15分钟才能全球生效。
+**重要提示：** 
+- DRM加密模式必须使用CloudFront来分发密钥文件
+- 标准HLS模式可以选择性使用CloudFront来提升性能
+- CloudFront分发部署通常需要10-15分钟才能全球生效
 
 ## 🎬 视频播放测试
 
-### 获取播放URL
-转换和分发完成后，你将获得以下URL：
+### 播放URL格式
 
+#### 标准HLS（S3直接访问）
 ```bash
-# 自适应播放列表（推荐）
-https://your-cloudfront-domain.cloudfront.net/video.m3u8
+# 仅限同区域访问，适合测试
+s3://your-bucket-name/output/hls/video.m3u8
+```
+
+#### 通过CloudFront分发
+```bash
+# 全球CDN加速，适合生产环境
+https://your-cloudfront-domain.cloudfront.net/output/hls/video.m3u8
 
 # 固定质量播放列表
-https://your-cloudfront-domain.cloudfront.net/video_1080p.m3u8
-https://your-cloudfront-domain.cloudfront.net/video_720p.m3u8
-https://your-cloudfront-domain.cloudfront.net/video_360p.m3u8
+https://your-cloudfront-domain.cloudfront.net/output/hls/video_1080p.m3u8
+https://your-cloudfront-domain.cloudfront.net/output/hls/video_720p.m3u8
+https://your-cloudfront-domain.cloudfront.net/output/hls/video_360p.m3u8
 ```
 
 ### 播放方式
@@ -198,23 +323,38 @@ https://your-cloudfront-domain.cloudfront.net/video_360p.m3u8
 ```bash
 # 打开本地HLS播放器
 open enhanced-hls-player.html
-# 或者通过管理脚本
-./manage-cloudfront.sh player
 ```
 
 **2. Safari直接播放：**
 ```bash
 # Safari原生支持HLS
-open 'https://your-cloudfront-domain.cloudfront.net/video.m3u8'
+open 'https://your-cloudfront-domain.cloudfront.net/output/hls/video.m3u8'
 ```
 
 **3. 集成到网页：**
 ```html
 <video controls width="800" height="450">
-  <source src="https://your-cloudfront-domain.cloudfront.net/video.m3u8" type="application/x-mpegURL">
+  <source src="https://your-cloudfront-domain.cloudfront.net/output/hls/video.m3u8" type="application/x-mpegURL">
   您的浏览器不支持HLS播放
 </video>
 ```
+
+### 验证DRM加密是否生效
+
+**仅适用于DRM加密模式：**
+
+```bash
+# 检查播放列表中的加密标记
+curl -s https://your-cloudfront-domain.cloudfront.net/output/hls/video.m3u8 | grep "EXT-X-KEY"
+
+# 测试密钥文件访问
+curl -I https://your-cloudfront-domain.cloudfront.net/keys/encryption.key
+
+# 下载视频分片检查加密状态
+curl -s https://your-cloudfront-domain.cloudfront.net/output/hls/segment.ts | head -c 100 | hexdump -C
+```
+
+如果看到 `#EXT-X-KEY` 标记和加密的视频分片数据，说明DRM加密成功！
 
 ## 🔧 配置选项
 
@@ -227,7 +367,7 @@ export AWS_REGION="us-east-1"
 export ROLE_NAME="MediaConvertRole"
 export PROJECT_NAME="mediaconvert-hls"
 
-# CloudFront配置（部署后获得）
+# CloudFront配置（DRM模式或需要CDN时）
 export DISTRIBUTION_ID="E1234567890ABC"
 export CLOUDFRONT_DOMAIN="d1234567890abc.cloudfront.net"
 export OAC_ID="E1234567890XYZ"
@@ -235,17 +375,8 @@ export OAC_ID="E1234567890XYZ"
 
 ### 命令行参数
 ```bash
-# 直接传递参数
+# 直接传递参数给转换脚本
 ./convert-to-hls.sh bucket-name video.mp4 us-west-2 MyRole
-```
-
-### 配置文件
-```bash
-# 编辑 .env 文件
-nano .env
-
-# 加载配置
-source .env
 ```
 
 ## 📊 技术规格
@@ -264,7 +395,7 @@ source .env
 - **帧率**: 保持原始帧率
 - **GOP大小**: 90帧
 
-### 🔐 DRM加密设置
+### 🔐 DRM加密设置（仅DRM模式）
 - **加密算法**: AES-128
 - **加密方式**: Static Key DRM
 - **密钥管理**: 支持固定密钥、时间相关密钥、用户相关密钥
@@ -277,7 +408,7 @@ source .env
 - **基础层**: $0.0075/分钟（前1000分钟/月）
 - **专业层**: $0.0150/分钟（1000分钟后）
 
-### CloudFront费用
+### CloudFront费用（可选）
 - **请求费用**: $0.0075/10,000请求
 - **数据传输**: $0.085/GB（前10TB/月）
 
@@ -285,7 +416,9 @@ source .env
 - **标准存储**: $0.023/GB/月
 - **请求费用**: $0.0004/1,000 PUT请求
 
-**示例：** 10分钟4K视频转换 + 1000次播放 ≈ $0.15
+**成本对比：**
+- **标准HLS**: 10分钟4K视频转换 ≈ $0.08
+- **DRM加密**: 10分钟4K视频转换 + CloudFront ≈ $0.15
 
 ## 🛠️ 故障排除
 
@@ -314,7 +447,7 @@ aws mediaconvert get-job --endpoint-url $ENDPOINT --id $JOB_ID
 # 检查CloudWatch日志
 ```
 
-**4. CloudFront访问403错误**
+**4. CloudFront访问403错误（DRM模式）**
 ```bash
 # 验证安全配置
 ./verify-security.sh
@@ -325,10 +458,11 @@ aws cloudfront get-origin-access-control --id $OAC_ID
 
 **5. 视频无法播放**
 ```bash
-# 测试CORS配置
-curl -H "Origin: https://example.com" -I https://your-domain/video.m3u8
+# 标准HLS: 检查S3访问权限
+aws s3 ls s3://$BUCKET_NAME/output/hls/
 
-# 检查浏览器控制台错误
+# DRM模式: 测试CORS配置
+curl -H "Origin: https://example.com" -I https://your-domain/video.m3u8
 ```
 
 ### 调试工具
@@ -336,14 +470,11 @@ curl -H "Origin: https://example.com" -I https://your-domain/video.m3u8
 # 配置验证
 ./verify-config.sh
 
-# 安全验证
+# 安全验证（DRM模式）
 ./verify-security.sh
 
 # CloudFront状态检查
 ./manage-cloudfront.sh status
-
-# 网络连接测试
-./manage-cloudfront.sh test
 ```
 
 ## 📁 项目文件说明
@@ -352,9 +483,12 @@ curl -H "Origin: https://example.com" -I https://your-domain/video.m3u8
 mediaConvert/
 ├── 🚀 核心脚本
 │   ├── setup-config.sh              # 配置向导脚本
-│   ├── convert-to-hls.sh            # 主转换脚本
-│   ├── manage-cloudfront.sh         # CloudFront管理脚本
-│   └── setup-drm-keys.sh            # DRM密钥生成和管理脚本
+│   ├── deploy-standard-complete.sh  # 一键标准HLS部署
+│   ├── deploy-drm-complete.sh       # 一键DRM加密部署
+│   ├── create-cloudfront.sh         # CloudFront分发创建脚本
+│   ├── setup-drm-keys.sh            # DRM密钥生成脚本
+│   ├── setup-iam-role.sh            # IAM角色管理脚本
+│   └── convert-to-hls.sh            # 传统转换脚本
 │
 ├── 🔍 验证脚本
 │   ├── verify-config.sh             # 配置验证脚本
@@ -363,10 +497,11 @@ mediaConvert/
 ├── 🎬 播放器
 │   └── enhanced-hls-player.html     # HLS播放器
 │
-├── ⚙️ 配置文件（模板化）
-│   ├── mediaconvert-job.json        # 标准MediaConvert作业配置
-│   ├── mediaconvert-job-encrypted-fixed.json # DRM加密作业配置
-│   ├── simple-mediaconvert-job.json # 简化版作业配置
+├── ⚙️ 配置文件
+│   ├── mediaconvert-job-template.json           # 标准HLS转码模板
+│   ├── mediaconvert-job-encrypted-template.json # DRM加密转码模板
+│   ├── mediaconvert-job-standard-ready.json     # 标准转码配置（脚本生成）
+│   ├── mediaconvert-job-encrypted-ready.json    # 加密转码配置（脚本生成）
 │   ├── trust-policy.json            # IAM信任策略
 │   ├── permissions-policy.json      # IAM权限策略
 │   ├── s3-bucket-policy.json        # S3存储桶策略
@@ -376,37 +511,38 @@ mediaConvert/
 │   ├── README.md                    # 主要文档（本文件）
 │   ├── SECURITY-GUIDE.md            # 安全配置指南
 │   ├── CloudFront-HLS-Setup-Guide.md # CloudFront详细指南
-│   └── 其他文档...
+│   ├── MEDIACONVERT-CONFIG-GUIDE.md # 配置文件指南
+│   └── DRM-SCRIPTS-ANALYSIS.md     # DRM脚本分析
 │
 ├── 🔧 环境配置
 │   ├── .env                         # 环境配置文件（自动生成）
 │   └── .env.example                 # 环境配置示例
 │
-└── 📄 项目信息
-    └── LICENSE                      # 开源许可证
+└── 📁 备份文件
+    └── backup/                      # 原始文件备份
 ```
 
 ## 🔒 安全最佳实践
 
-### S3安全
+### 标准HLS安全
+- 使用IAM角色而非用户密钥
+- 定期轮换访问密钥
+- 监控S3访问日志
+
+### DRM加密安全
 - 存储桶设置为私有
 - 仅允许CloudFront OAC访问
 - 启用公共访问阻止
-
-### CloudFront安全
 - 强制HTTPS重定向
-- 使用Origin Access Control (OAC)
-- 限制访问来源
-
-### IAM安全
-- 最小权限原则
-- 定期轮换访问密钥
-- 使用IAM角色而非用户密钥
+- 定期轮换加密密钥
+- 使用HTTPS保护密钥URL
+- 监控密钥访问日志
+- 实施用户认证机制
 
 ## 📚 进阶配置
 
 ### 自定义视频参数
-编辑 `mediaconvert-job.json` 文件：
+编辑模板文件：
 - 调整码率设置
 - 修改分辨率配置
 - 更改编码参数
@@ -424,10 +560,16 @@ export PROJECT_NAME="mediaconvert-prod"
 
 ### 批量处理
 ```bash
-# 处理多个视频文件
+# 标准HLS批量处理
 for video in *.mp4; do
     export INPUT_FILE="$video"
-    ./convert-to-hls.sh
+    ./deploy-standard-complete.sh
+done
+
+# DRM加密批量处理
+for video in *.mp4; do
+    export INPUT_FILE="$video"
+    ./deploy-drm-complete.sh
 done
 ```
 
@@ -435,15 +577,16 @@ done
 
 ### 文档资源
 - `CloudFront-HLS-Setup-Guide.md` - CloudFront详细配置
-- `PARAMETERIZATION-SUMMARY.md` - 参数化配置说明
-- `config-explanation.md` - 配置文件详解
-- `parameter-guide.md` - 参数速查表
+- `MEDIACONVERT-CONFIG-GUIDE.md` - 配置文件详解
+- `DRM-SCRIPTS-ANALYSIS.md` - DRM脚本分析
+- `SECURITY-GUIDE.md` - 安全配置指南
 
 ### 支持渠道
 1. 检查项目文档和故障排除部分
-2. 运行验证脚本诊断问题
-3. 查看AWS CloudWatch日志
-4. 参考AWS官方文档
+2. 标准HLS: 运行 `./deploy-standard-complete.sh`
+3. DRM加密: 运行 `./deploy-drm-complete.sh`
+4. 查看脚本输出的详细错误信息
+5. 参考AWS官方文档
 
 ### 有用的AWS文档链接
 - [AWS MediaConvert用户指南](https://docs.aws.amazon.com/mediaconvert/)
@@ -451,18 +594,38 @@ done
 - [Amazon S3用户指南](https://docs.aws.amazon.com/s3/)
 - [HLS规范文档](https://tools.ietf.org/html/rfc8216)
 
+### 验证命令
+```bash
+# 检查转码作业
+aws mediaconvert get-job --endpoint-url $ENDPOINT --id $JOB_ID
+
+# 验证配置
+./verify-config.sh
+
+# 验证安全配置（DRM模式）
+./verify-security.sh
+```
+
 ---
 
 ## 🎉 部署成功！
 
-完成上述步骤后，你将拥有：
+### 标准HLS模式
+完成标准部署后，你将拥有：
 - ✅ 多分辨率HLS视频流
-- ✅ 全球CDN分发
 - ✅ 自适应码率播放
-- ✅ 安全的访问控制
 - ✅ 跨浏览器兼容性
+- ✅ 可选的CDN分发
 
-**开始播放你的视频吧！** 🎬
+### DRM加密模式
+完成DRM部署后，你将拥有：
+- ✅ 加密的多分辨率HLS视频流
+- ✅ 全球CDN分发
+- ✅ 安全的访问控制
+- ✅ DRM内容保护
+- ✅ 密钥管理系统
+
+**开始播放你的HLS视频吧！** 🎬
 
 ---
 

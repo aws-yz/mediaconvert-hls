@@ -91,7 +91,7 @@ mediaConvert/
 
 | 参数 | 环境变量 | 默认值 | 说明 |
 |------|----------|--------|------|
-| S3存储桶 | `BUCKET_NAME` | `wyz-mediaconvert-bucket-virginia` | 存储视频文件 |
+| S3存储桶 | `BUCKET_NAME` | `your-unique-bucket-name` | 存储视频文件 |
 | 输入文件 | `INPUT_FILE` | `4ktest.mp4` | 源视频文件名 |
 | AWS区域 | `AWS_REGION` | `us-east-1` | 部署区域 |
 | IAM角色 | `ROLE_NAME` | `MediaConvertRole` | MediaConvert角色 |

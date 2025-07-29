@@ -444,10 +444,10 @@ cat > verify-security.sh << EOF
 #!/bin/bash
 
 # 使用环境变量或默认值
-BUCKET_NAME="\${BUCKET_NAME:-wyz-mediaconvert-bucket-virginia}"
-DISTRIBUTION_ID="\${DISTRIBUTION_ID:-E2OOLQY70ZOTOA}"
-OAC_ID="\${OAC_ID:-EZ3T285Q2VMKQ}"
-CLOUDFRONT_DOMAIN="\${CLOUDFRONT_DOMAIN:-d3g6olblkz60ii.cloudfront.net}"
+BUCKET_NAME="\${BUCKET_NAME:-your-unique-bucket-name}"
+DISTRIBUTION_ID="\${DISTRIBUTION_ID:-E1234567890ABC}"
+OAC_ID="\${OAC_ID:-E1234567890XYZ}"
+CLOUDFRONT_DOMAIN="\${CLOUDFRONT_DOMAIN:-d1234567890abc.cloudfront.net}"
 
 echo "🔒 CloudFront和S3安全配置验证"
 echo "=================================="
